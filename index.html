@@ -1,0 +1,144 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>JARVIS AI</title><style>
+:root{--c:#00e5ff;--b:#1e6bff;--t:#cfefff}
+body[data-s=err]{--c:#ff4d5e;--b:#a01020}body[data-s=off]{--c:#7a8a99;--b:#445}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;background:radial-gradient(circle at 50% 15%,#06204a,#02060f 70%);color:var(--t);font:15px system-ui,sans-serif;overflow:hidden}
+#app{height:100%;display:flex;flex-direction:column;padding:env(safe-area-inset-top) 10px env(safe-area-inset-bottom);max-width:760px;margin:auto}
+header{display:flex;justify-content:space-between;align-items:center;padding:8px 2px;font-size:12px;letter-spacing:2px;color:var(--c)}
+#st{border:1px solid var(--c);padding:3px 8px;border-radius:12px;box-shadow:0 0 8px var(--c) inset}
+#clock{text-align:center;font-size:11px;letter-spacing:2px;opacity:.8}
+.core{position:relative;width:150px;height:150px;margin:6px auto;flex:none;cursor:pointer}
+.core i{position:absolute;inset:0;border-radius:50%;border:2px dashed var(--c);opacity:.6;animation:sp 14s linear infinite}
+.core i:nth-child(2){inset:14px;border:2px solid transparent;border-top-color:var(--b);border-bottom-color:var(--b);animation-duration:6s;animation-direction:reverse;opacity:1}
+.core i:nth-child(3){inset:30px;border-style:dotted;animation-duration:9s}
+.core b{position:absolute;inset:50px;border-radius:50%;background:radial-gradient(#fff,var(--c) 40%,transparent 72%);box-shadow:0 0 30px var(--c);animation:pu 2.4s ease-in-out infinite}
+body[data-s=think] .core i{animation-duration:2s}body[data-s=speak] .core b,body[data-s=listen] .core b{animation-duration:.6s}
+@keyframes sp{to{transform:rotate(360deg)}}@keyframes pu{50%{transform:scale(1.25);opacity:.7}}
+.wave{display:flex;gap:3px;justify-content:center;height:18px;align-items:center}
+.wave s{width:3px;height:3px;background:var(--c);border-radius:2px}
+body[data-s=speak] .wave s,body[data-s=listen] .wave s{animation:wv .5s ease-in-out infinite alternate}
+.wave s:nth-child(2n){animation-delay:.15s!important}.wave s:nth-child(3n){animation-delay:.3s!important}
+@keyframes wv{to{height:16px}}
+#log{flex:1;overflow-y:auto;margin:6px 0;padding:8px;border:1px solid #1e6bff55;border-radius:10px;background:#04122899;box-shadow:0 0 14px #00e5ff22 inset}
+.m{margin:6px 0;padding:8px 10px;border-radius:8px;white-space:pre-wrap;word-wrap:break-word;max-width:92%;line-height:1.4}
+.m.user{margin-left:auto;background:#1e6bff33;border:1px solid #1e6bff}.m.assistant{background:#00e5ff12;border:1px solid #00e5ff66}.m.err{border:1px solid #ff4d5e;color:#ff9aa5}
+#bar{display:flex;gap:6px;padding-bottom:8px}
+button,select,input,textarea{font:inherit;color:var(--t);background:#06142a;border:1px solid #1e6bff;border-radius:8px;padding:8px}
+button{cursor:pointer;color:var(--c)}#in{flex:1;min-width:0}
+#mic.on{background:var(--c);color:#000;animation:pu 1s infinite}#mic.cont{box-shadow:0 0 10px var(--c)}
+#dr{position:fixed;inset:0;background:#02060ff2;display:none;flex-direction:column;padding:env(safe-area-inset-top) 10px env(safe-area-inset-bottom);z-index:5;max-width:760px;margin:auto}
+#dr.open{display:flex}#tabs{display:flex;gap:4px;flex-wrap:wrap;padding:8px 0}#tabs button.a{background:var(--c);color:#000}
+.tab{display:none;overflow-y:auto;flex:1}.tab.a{display:block}.tab>*{display:block;width:100%;margin:5px 0}
+.row{display:flex!important;gap:6px;align-items:center}.row>*{margin:0}.it{border:1px solid #1e6bff66;border-radius:8px;padding:8px;white-space:pre-wrap}
+label{font-size:12px;opacity:.8}small{opacity:.7;display:block;margin:6px 0}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#06142a;border:1px solid var(--c);padding:8px 12px;border-radius:8px;display:none;z-index:9;max-width:90%}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style></head><body data-s="init"><div id="app">
+<header><span>J.A.R.V.I.S</span><span id="st">INICIALIZANDO</span><button id="menu">☰</button></header>
+<div id="clock"></div>
+<div class="core" id="core" title="Toca para silenciar"><i></i><i></i><i></i><b></b></div>
+<div class="wave" id="wave"></div>
+<div id="log"></div>
+<div id="bar"><button id="mic" title="Hablar">🎤</button><button id="cbtn" title="Conversación continua">∞</button><input id="in" placeholder="Escribe a JARVIS…" maxlength="4000" autocomplete="off"><button id="go">▶</button></div></div>
+<div id="dr"><div class="row"><b style="flex:1;color:var(--c)">PANEL</b><button id="cl">✕</button></div><div id="tabs"></div>
+<section class="tab" id="t-hist"><button id="newc">+ Nueva conversación</button><div id="hl"></div><button id="delh">Borrar historial de chats</button></section>
+<section class="tab" id="t-notes"><textarea id="nt" rows="3" placeholder="Nota…"></textarea><button id="nadd">Guardar nota</button><div id="nl"></div></section>
+<section class="tab" id="t-tasks"><div class="row"><input id="tk" placeholder="Nueva tarea" style="flex:1"><button id="tadd">+</button></div><div id="tl"></div></section>
+<section class="tab" id="t-time"><div class="it" id="td" style="font-size:28px;text-align:center">00:00</div><div class="row"><input id="tmin" type="number" min="1" max="1440" value="5" style="flex:1"><span>min</span></div><div class="row"><button id="t1">Iniciar</button><button id="t2">Pausar</button><button id="t3">Reanudar</button><button id="t4">Reiniciar</button></div></section>
+<section class="tab" id="t-calc"><input id="ce" placeholder="Ej: (12+8)*3/4"><button id="cb">=</button><div class="it" id="cr">—</div></section>
+<section class="tab" id="t-cfg"><label>Proveedor</label><select data-k="prov"><option value="gemini">Google Gemini</option><option value="openrouter">OpenRouter</option></select>
+<label>Modelo (editable; cambia con el tiempo)</label><input data-k="model">
+<label>API key (se guarda solo en este navegador)</label><input data-k="key" type="password" autocomplete="off">
+<label>URL del proxy (Cloudflare Worker, recomendado; si se llena, se ignora la key local)</label><input data-k="proxy" placeholder="https://…workers.dev">
+<label>Estilo/personalidad extra</label><textarea data-k="persona" rows="2" placeholder="Ej: más breve, más técnico"></textarea>
+<label>Idioma de voz</label><input data-k="lang"><label>Voz</label><select id="vs" data-k="voice"></select>
+<label>Velocidad</label><input type="range" data-k="rate" min=".6" max="1.6" step=".1"><label>Volumen</label><input type="range" data-k="vol" min="0" max="1" step=".1">
+<div class="row"><input type="checkbox" data-k="speak" style="width:auto"><span>Responder hablando</span></div>
+<button id="test">Probar conexión con la IA</button><button id="delall">Borrar TODOS los datos locales</button>
+<small>Local (tu navegador): chats, notas, tareas, ajustes y key (si no usas proxy). Enviado al proveedor de IA: tus mensajes recientes, un resumen de la conversación y la hora local. Nunca escribas contraseñas en el chat. Gemini en plan gratuito puede usar tus datos para mejorar sus modelos.</small></section></div>
+<div id="toast"></div><script>
+'use strict';
+const $=s=>document.querySelector(s),E=(t,o={},...k)=>{const e=Object.assign(document.createElement(t),o);e.append(...k);return e},LS='jarvis.v1';
+let S={convs:[],cur:null,notes:[],tasks:[],cfg:{prov:'gemini',model:'gemini-flash-latest',key:'',proxy:'',speak:true,voice:'',rate:1,vol:1,persona:'',lang:'es-ES'}};
+try{const d=JSON.parse(localStorage.getItem(LS));if(d)S={...S,...d,cfg:{...S.cfg,...d.cfg}}}catch(e){}
+const save=()=>{try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){toast('No se pudo guardar localmente.')}};
+let ok=false,busy=false,speaking=false,listening=false,cont=false,last=0,tmr;
+function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(tmr);tmr=setTimeout(()=>t.style.display='none',4500)}
+function setSt(s,l){document.body.dataset.s=s;$('#st').textContent=l}
+function idle(){if(!navigator.onLine)return setSt('off','SIN CONEXIÓN');const c=S.cfg;if(!c.key&&!c.proxy)return setSt('init','SIN CONFIGURAR');ok?setSt('ok','ONLINE'):setSt('init','LISTO (NO VERIFICADO)')}
+function after(){idle();if(cont&&!listening&&!busy&&!speaking)setTimeout(listen,400)}
+const cv=()=>{let c=S.convs.find(x=>x.id==S.cur);if(!c){c={id:Date.now(),title:'Nueva conversación',msgs:[],summary:''};S.convs.unshift(c);S.cur=c.id;save()}return c};
+function render(){const l=$('#log');l.textContent='';cv().msgs.forEach(m=>l.append(E('div',{className:'m '+m.role,textContent:m.content})));l.scrollTop=l.scrollHeight}
+const sysP=c=>`Eres JARVIS, asistente personal avanzado inspirado en el de Iron Man (sin copiar recursos protegidos). Responde en español salvo que el usuario use otro idioma. Tono formal pero natural, preciso, proactivo y honesto: si no sabes algo o no puedes verificarlo, dilo. No tienes acceso a internet ni a datos en tiempo real, salvo lo que el usuario te dé. Sé breve salvo que pidan detalle. Hora local del usuario: ${new Date().toLocaleString('es')}.
+Herramientas: si el usuario pide una acción, responde con una frase breve y añade AL FINAL una línea exacta: @@TOOL {"name":"...","args":{...}}. Disponibles: note{text}, task{text}, timer{seconds}, calc{expr}, open{url}. Una sola por respuesta. Nunca afirmes haber hecho una acción sin usar la herramienta.${S.cfg.persona?'\nEstilo preferido: '+S.cfg.persona:''}${c.summary?'\nResumen de la conversación previa: '+c.summary:''}`;
+async function ask(msgs,sys){const c=S.cfg;if(!c.proxy&&!c.key)throw new Error('Configura una API key o un proxy en ☰ → Config.');
+let url,hd={'Content-Type':'application/json'},body;msgs=msgs.filter(m=>m.role!='err');
+if(c.proxy){url=c.proxy;body={provider:c.prov,model:c.model,system:sys,messages:msgs}}
+else if(c.prov=='gemini'){url=`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(c.model)}:generateContent`;hd['x-goog-api-key']=c.key;body={systemInstruction:{parts:[{text:sys}]},contents:msgs.map(m=>({role:m.role=='user'?'user':'model',parts:[{text:m.content}]}))}}
+else{url='https://openrouter.ai/api/v1/chat/completions';hd.Authorization='Bearer '+c.key;body={model:c.model,messages:[{role:'system',content:sys},...msgs]}}
+const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),45000);let r;
+try{r=await fetch(url,{method:'POST',headers:hd,body:JSON.stringify(body),signal:ctl.signal})}catch(e){throw new Error(navigator.onLine?'No se pudo contactar al servicio (red, URL del proxy o CORS).':'Sin conexión a internet.')}finally{clearTimeout(to)}
+let j={};try{j=await r.json()}catch(e){}
+if(!r.ok){const m=String(j.error?.message||j.error||'').slice(0,160);throw new Error(r.status==429?'Límite del proveedor alcanzado (429). Espera un poco o cambia de modelo/proveedor.':[401,403].includes(r.status)?'API key inválida o sin permiso ('+r.status+').':r.status==404?'Modelo no encontrado: revisa el nombre en Config.':`Error ${r.status}: ${m}`)}
+const t=c.proxy?j.text:c.prov=='gemini'?(j.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join(''):j.choices?.[0]?.message?.content;
+if(!t)throw new Error('Respuesta vacía del modelo (posible filtro de seguridad).');return t}
+async function compact(c){const m=c.msgs.filter(x=>x.role!='err');if(m.length<30)return;const old=m.slice(0,16);try{const s=await ask([{role:'user',content:'Resume en máx. 150 palabras los datos clave:\n'+old.map(x=>x.role+': '+x.content).join('\n')}],'Eres un resumidor conciso.');c.summary=((c.summary||'')+' '+s).slice(-1500);c.msgs=c.msgs.filter(x=>!old.includes(x))}catch(e){}}
+function calc(e){e=String(e).replace(/,/g,'.').replace(/\^/g,'**').replace(/×/g,'*').replace(/÷/g,'/');if(!/^[\d+\-*/().%\s]+$/.test(e)||e.length>100)throw new Error('Expresión no válida');const v=Function('"use strict";return('+e+')')();if(!isFinite(v))throw new Error('Resultado no válido');return +v.toFixed(10)}
+const str=v=>typeof v=='string'&&v.length>0&&v.length<2000;
+const T={note:{v:a=>str(a.text),r:a=>{S.notes.push({id:Date.now(),t:a.text});save();rN();return'Nota guardada.'}},
+task:{v:a=>str(a.text),r:a=>{S.tasks.push({id:Date.now(),t:a.text,d:0});save();rT();return'Tarea añadida.'}},
+timer:{v:a=>+a.seconds>0&&+a.seconds<=86400,r:a=>{tm.left=Math.floor(a.seconds);run();return'Temporizador iniciado.'}},
+calc:{v:a=>str(a.expr),r:a=>'Resultado: '+calc(a.expr)},
+open:{v:a=>/^https?:\/\/[^\s]+$/i.test(a.url||''),r:a=>{if(!confirm('¿Abrir '+a.url+' ?'))return'Cancelado por el usuario.';window.open(a.url,'_blank','noopener,noreferrer');return'Página abierta.'}}};
+function runTool(t){const d=T[t&&t.name];if(!d||!t.args||!d.v(t.args))return'Acción no válida; no se ejecutó.';try{return d.r(t.args)}catch(e){return'Error: '+e.message}}
+async function send(t){t=(t||'').trim().slice(0,4000);if(!t)return;if(busy)return toast('Procesando, espera…');if(Date.now()-last<1000)return;last=Date.now();
+const c=cv();c.msgs.push({role:'user',content:t});if(c.title=='Nueva conversación')c.title=t.slice(0,30);render();busy=true;setSt('think','PROCESANDO');
+try{await compact(c);const a=await ask(c.msgs.slice(-24),sysP(c));ok=true;let txt=a,res='';const m=a.match(/@@TOOL\s*(\{[\s\S]*\})\s*$/);
+if(m){txt=a.slice(0,m.index).trim();try{res=runTool(JSON.parse(m[1]))}catch(e){res='Acción no válida; no se ejecutó.'}}
+c.msgs.push({role:'assistant',content:(txt+(res?'\n⚙ '+res:'')).trim()});save();render();busy=false;speak((txt+' '+res).trim())}
+catch(e){busy=false;ok=false;c.msgs.push({role:'err',content:'⚠ '+e.message});save();render();setSt('err','ERROR');toast(e.message);setTimeout(after,2500)}}
+function speak(t,f){if(!('speechSynthesis'in window)||(!S.cfg.speak&&!f))return after();t=t.replace(/[*_`#>]/g,'').trim();if(!t)return after();
+speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t),v=speechSynthesis.getVoices().find(v=>v.name==S.cfg.voice);if(v)u.voice=v;u.lang=S.cfg.lang;u.rate=+S.cfg.rate;u.volume=+S.cfg.vol;
+u.onstart=()=>{speaking=true;setSt('speak','RESPONDIENDO')};u.onend=u.onerror=()=>{speaking=false;after()};speechSynthesis.speak(u)}
+function stopSpeak(){try{speechSynthesis.cancel()}catch(e){}speaking=false}
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec;
+function listen(){if(!SR)return toast('Este navegador no soporta reconocimiento de voz. Usa Chrome en Android (con HTTPS).');if(listening)return;stopSpeak();
+rec=new SR();rec.lang=S.cfg.lang;rec.interimResults=true;
+rec.onstart=()=>{listening=true;setSt('listen','ESCUCHANDO');$('#mic').classList.add('on')};
+rec.onresult=e=>{let t='';for(const r of e.results)t+=r[0].transcript;$('#in').value=t;if(e.results[e.results.length-1].isFinal){$('#in').value='';send(t)}};
+rec.onerror=e=>{if(['no-speech','aborted'].includes(e.error))return;cont=false;$('#cbtn').classList.remove('cont');toast(['not-allowed','service-not-allowed'].includes(e.error)?'Permiso de micrófono denegado: actívalo en los ajustes del sitio (candado junto a la URL).':'Error de voz: '+e.error)};
+rec.onend=()=>{listening=false;$('#mic').classList.remove('on');if(!busy&&!speaking)after()};
+try{rec.start()}catch(e){listening=false}}
+function stopListen(){try{rec&&rec.abort()}catch(e){}listening=false;$('#mic').classList.remove('on')}
+let tm={left:0,iv:0};
+function drawT(){const s=Math.max(0,tm.left);$('#td').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+function run(){clearInterval(tm.iv);drawT();if(tm.left<=0)return;tm.iv=setInterval(()=>{tm.left--;drawT();if(tm.left<=0){clearInterval(tm.iv);navigator.vibrate&&navigator.vibrate([300,150,300]);toast('⏱ Temporizador finalizado');speak('Temporizador finalizado.',true)}},1000)}
+function rN(){const l=$('#nl');l.textContent='';S.notes.forEach(n=>l.append(E('div',{className:'it'},n.t,E('div',{className:'row'},E('button',{textContent:'✎',onclick:()=>{$('#nt').value=n.t;S.notes=S.notes.filter(x=>x!=n);save();rN()}}),E('button',{textContent:'✕',onclick:()=>{S.notes=S.notes.filter(x=>x!=n);save();rN()}})))))}
+function rT(){const l=$('#tl');l.textContent='';S.tasks.forEach(k=>l.append(E('div',{className:'it row'},E('input',{type:'checkbox',checked:!!k.d,style:'width:auto',onchange:e=>{k.d=e.target.checked?1:0;save();rT()}}),E('span',{textContent:k.t,style:'flex:1;'+(k.d?'text-decoration:line-through;opacity:.5':'')}),E('button',{textContent:'✕',onclick:()=>{S.tasks=S.tasks.filter(x=>x!=k);save();rT()}}))))}
+function rH(){const l=$('#hl');l.textContent='';S.convs.forEach(c=>l.append(E('button',{textContent:(c.id==S.cur?'● ':'')+c.title,style:'width:100%;margin:4px 0;text-align:left',onclick:()=>{S.cur=c.id;save();render();$('#dr').classList.remove('open')}})))}
+const tabs=[['hist','Chats'],['notes','Notas'],['tasks','Tareas'],['time','Timer'],['calc','Calc'],['cfg','Config']];
+tabs.forEach(([k,n],i)=>$('#tabs').append(E('button',{textContent:n,onclick:e=>{document.querySelectorAll('.tab,#tabs button').forEach(x=>x.classList.remove('a'));$('#t-'+k).classList.add('a');e.target.classList.add('a');if(k=='hist')rH()}})));
+$('#tabs button').click();
+$('#menu').onclick=()=>$('#dr').classList.add('open');$('#cl').onclick=()=>$('#dr').classList.remove('open');
+$('#go').onclick=()=>{const v=$('#in').value;$('#in').value='';send(v)};$('#in').onkeydown=e=>{if(e.key=='Enter')$('#go').click()};
+$('#mic').onclick=()=>listening?(stopListen(),after()):listen();
+$('#cbtn').onclick=()=>{cont=!cont;$('#cbtn').classList.toggle('cont',cont);toast(cont?'Conversación continua ACTIVADA (micrófono activo mientras esté en pantalla).':'Conversación continua desactivada.');cont?listen():stopListen()};
+$('#core').onclick=()=>{stopSpeak();after()};
+$('#newc').onclick=()=>{S.convs.unshift({id:Date.now(),title:'Nueva conversación',msgs:[],summary:''});S.cur=S.convs[0].id;save();render();$('#dr').classList.remove('open')};
+$('#delh').onclick=()=>{if(confirm('¿Borrar todas las conversaciones?')){S.convs=[];S.cur=null;save();cv();render();rH()}};
+$('#nadd').onclick=()=>{const v=$('#nt').value.trim();if(v){S.notes.push({id:Date.now(),t:v.slice(0,2000)});$('#nt').value='';save();rN()}};
+$('#tadd').onclick=()=>{const v=$('#tk').value.trim();if(v){S.tasks.push({id:Date.now(),t:v.slice(0,300),d:0});$('#tk').value='';save();rT()}};
+$('#t1').onclick=()=>{const m=+$('#tmin').value;if(m>0&&m<=1440){tm.left=Math.floor(m*60);run()}else toast('Entre 1 y 1440 minutos.')};
+$('#t2').onclick=()=>clearInterval(tm.iv);$('#t3').onclick=run;$('#t4').onclick=()=>{clearInterval(tm.iv);tm.left=0;drawT()};
+$('#cb').onclick=()=>{try{$('#cr').textContent=calc($('#ce').value)}catch(e){$('#cr').textContent='⚠ '+e.message}};
+document.querySelectorAll('[data-k]').forEach(i=>{const k=i.dataset.k,v=S.cfg[k];if(i.type=='checkbox')i.checked=!!v;else if(i.tagName!='SELECT'||k=='prov')i.value=v;
+i.onchange=i.oninput=()=>{S.cfg[k]=i.type=='checkbox'?i.checked:i.value.trim?i.value.trim():i.value;if(k=='prov'){S.cfg.model=i.value=='gemini'?'gemini-flash-latest':'openrouter/free';document.querySelector('[data-k=model]').value=S.cfg.model}ok=false;save();idle()}});
+function voices(){const v=speechSynthesis.getVoices(),s=$('#vs');s.textContent='';const es=v.filter(x=>x.lang.toLowerCase().startsWith('es'));(es.length?es:v).forEach(x=>s.append(E('option',{value:x.name,textContent:x.name+' ('+x.lang+')',selected:x.name==S.cfg.voice})))}
+if('speechSynthesis'in window){voices();speechSynthesis.onvoiceschanged=voices}
+$('#test').onclick=async()=>{setSt('think','PROCESANDO');try{await ask([{role:'user',content:'Responde solo: OK'}],'Responde brevemente.');ok=true;toast('✔ Conexión real con la IA verificada.')}catch(e){ok=false;setSt('err','ERROR');toast(e.message);return setTimeout(idle,2500)}idle()};
+$('#delall').onclick=()=>{if(confirm('¿Borrar chats, notas, tareas, ajustes y key de este navegador?')){try{localStorage.removeItem(LS)}catch(e){}location.reload()}};
+const w=$('#wave');for(let i=0;i<14;i++)w.append(E('s'));
+setInterval(()=>$('#clock').textContent=new Date().toLocaleString('es',{weekday:'long',day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'}).toUpperCase(),1000);
+addEventListener('online',idle);addEventListener('offline',idle);
+cv();render();rN();rT();drawT();setTimeout(idle,700);
+</script></body></html>
